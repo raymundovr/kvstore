@@ -8,7 +8,7 @@ import (
 /*
 Handle with care
 */
-var Store = struct {
+var store = struct {
 	sync.RWMutex
 	m map[string]string
 } {m: make(map[string]string) }
@@ -16,17 +16,17 @@ var Store = struct {
 var ErrorNoSuchKey = errors.New("no such key")
 
 func Put(k, v string) error {
-	Store.Lock()
-	Store.m[k] = v
-	Store.Unlock()
+	store.Lock()
+	store.m[k] = v
+	store.Unlock()
 
 	return nil
 }
 
 func Get(k string) (string, error) {
-	Store.RLock()
-	value, ok := Store.m[k]
-	Store.RUnlock()
+	store.RLock()
+	value, ok := store.m[k]
+	store.RUnlock()
 
 	if !ok {
 		return "", ErrorNoSuchKey
@@ -36,9 +36,9 @@ func Get(k string) (string, error) {
 }
 
 func Delete(k string) error {
-	Store.Lock()
-	delete(Store.m, k)
-	Store.Unlock()
+	store.Lock()
+	delete(store.m, k)
+	store.Unlock()
 
 	return nil
 }
