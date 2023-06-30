@@ -31,6 +31,8 @@ func putHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, KVResponse{Success: false})
 	}
 
+	ServiceStorage.WritePut(entry.Key, entry.Value)
+
 	return c.JSON(http.StatusOK, KVResponse{Success: true, Data: *entry})
 }
 
@@ -67,6 +69,8 @@ func deleteHandler(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
+
+	ServiceStorage.WriteDelete(key)
 
 	return c.JSON(http.StatusOK, KVResponse{Success: true})
 

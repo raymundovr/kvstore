@@ -62,7 +62,7 @@ func (l *KVLogStorage) Run() {
 	}()
 }
 
-func (l *KVLogStorage) LoadEvents() (chan KVStorageEvent, chan error) {
+func (l *KVLogStorage) LoadEvents() (<-chan KVStorageEvent, <-chan error) {
 	scanner := bufio.NewScanner(l.file)
 	// We declare a channel of concrete/copied values, not pointers
 	events := make(chan KVStorageEvent)
