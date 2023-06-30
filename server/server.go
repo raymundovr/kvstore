@@ -19,5 +19,5 @@ func InitializeServer() {
 	server.GET("/", getHandler)
 	server.DELETE("/", deleteHandler)
 
-	server.Logger.Fatal(server.Start(":12345"))
+	server.Logger.Fatal(server.Start(":8080"))
 }
