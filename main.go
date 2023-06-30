@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/go-playground/validator"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/raymundovr/kvstore/server"
 	"github.com/raymundovr/kvstore/storage"
 )
 
@@ -18,17 +16,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	server := echo.New()
-
-	server.Use(middleware.Logger())
-	server.Use(middleware.Recover())
-
-	server.Validator = &KVValidator{validator: validator.New()}
-
-	// Setup routes
-	server.PUT("/", putHandler)
-	server.GET("/", getHandler)
-	server.DELETE("/", deleteHandler)
-
-	server.Logger.Fatal(server.Start(":12345"))
+	server.InitializeServer()
 }

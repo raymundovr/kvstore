@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"github.com/labstack/echo/v4"
@@ -39,7 +39,6 @@ func putHandler(c echo.Context) error {
 }
 
 func getHandler(c echo.Context) error {
-	c.Logger().Print("Arriving")
 	key := c.QueryParam("key")
 
 	if key == "" {

@@ -25,8 +25,8 @@ func InitializeEventsStorage() error {
 	// We'll reuse the same variables set
 	event, isChannelOpen := KVStorageEvent{}, true
 
-	fmt.Println("[Storage] Loading events from storage");
-	for isChannelOpen && err != nil {
+	fmt.Println("[Storage] Loading events from storage", isChannelOpen, err);
+	for isChannelOpen && err == nil {
 		select {
 		// the <-channel syntax allows isChannelOpen to get 'false' when channel is closed
 		// the consequent `case` here are not like those in a `switch`
