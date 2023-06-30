@@ -1,20 +1,19 @@
-package main
+package storage
 
 import (
 	"fmt"
-
-	"github.com/raymundovr/kvstore/storage"
+	kv "github.com/raymundovr/kvstore/core"
 )
 
 // One pointer to share among the package
-var ServiceStorage *storage.KVLogStorage
+var ServiceStorage *KVLogStorage
 
-func initializeEventsStorage() error {
+func InitializeEventsStorage() error {
 	fmt.Println("[Storage] Initializing Events Storage");
 	// We'll reuse this
 	var err error
 
-	logStorage, err := storage.NewKVLogStorage("transactions.log")
+	logStorage, err := NewKVLogStorage("transactions.log")
 	if err != nil {
 		return fmt.Errorf("could not initialize transactions file: %w", err)
 	}
@@ -24,7 +23,7 @@ func initializeEventsStorage() error {
 
 	events, errors := ServiceStorage.LoadEvents()
 	// We'll reuse the same variables set
-	event, isChannelOpen := storage.KVStorageEvent{}, true
+	event, isChannelOpen := KVStorageEvent{}, true
 
 	fmt.Println("[Storage] Loading events from storage");
 	for isChannelOpen && err != nil {
@@ -34,10 +33,10 @@ func initializeEventsStorage() error {
 		case err, isChannelOpen = <-errors:
 		case event, isChannelOpen = <-events:
 			switch event.EventType {
-			case storage.DeleteEvent:
-				err = Delete(event.Key)
-			case storage.PutEvent:
-				err = Put(event.Key, event.Value)
+			case DeleteEvent:
+				err = kv.Delete(event.Key)
+			case PutEvent:
+				err = kv.Put(event.Key, event.Value)
 			}
 		}
 	}

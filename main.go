@@ -7,11 +7,12 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/raymundovr/kvstore/storage"
 )
 
 func main() {
 	// Initialize events storage before server
-	if err := initializeEventsStorage(); err != nil {
+	if err := storage.InitializeEventsStorage(); err != nil {
 		fmt.Println("Cannot start service: %w", err)
 		// At the moment we want to crash
 		os.Exit(1)

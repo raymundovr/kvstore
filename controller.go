@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"github.com/raymundovr/kvstore/storage"
+	kv "github.com/raymundovr/kvstore/core"
 )
 
 type KVEntry struct {
@@ -26,12 +28,12 @@ func putHandler(c echo.Context) error {
 		return err
 	}
 
-	err := Put(entry.Key, entry.Value)
+	err := kv.Put(entry.Key, entry.Value)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, KVResponse{Success: false})
 	}
 
-	ServiceStorage.WritePut(entry.Key, entry.Value)
+	storage.ServiceStorage.WritePut(entry.Key, entry.Value)
 
 	return c.JSON(http.StatusOK, KVResponse{Success: true, Data: *entry})
 }
@@ -44,7 +46,7 @@ func getHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 
-	value, err := Get(key)
+	value, err := kv.Get(key)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound)
@@ -64,13 +66,13 @@ func deleteHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 
-	err := Delete(key)
+	err := kv.Delete(key)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
 
-	ServiceStorage.WriteDelete(key)
+	storage.ServiceStorage.WriteDelete(key)
 
 	return c.JSON(http.StatusOK, KVResponse{Success: true})
 
