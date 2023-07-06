@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	// "github.com/raymundovr/kvstore/grpc"
 	"github.com/raymundovr/kvstore/server"
 	"github.com/raymundovr/kvstore/storage"
 )
@@ -17,4 +18,5 @@ func main() {
 	}
 
 	server.InitializeServer()
+	// grpc.RunServer()
 }
