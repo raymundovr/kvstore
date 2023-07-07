@@ -55,3 +55,7 @@ func (store *KVStore) Delete(k string) error {
 
 	return nil
 }
+
+func (store *KVStore) Restore() error {
+	return nil
+}

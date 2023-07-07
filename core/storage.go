@@ -5,6 +5,7 @@ type KVStorage interface {
 	WritePut(k, v string) error
 
 	Run()
+	Load(store *KVStore) error
 	LoadEvents() (<-chan KVStorageEvent, <-chan error)
 
 	Err() <-chan error

@@ -8,41 +8,12 @@ import (
 // One pointer to share among the package
 var ServiceStorage *KVLogStorage
 
-func InitializeEventsStorage() error {
-	fmt.Println("[Storage] Initializing Events Storage");
-	// We'll reuse this
-	var err error
-
-	logStorage, err := NewKVLogStorage("transactions.log")
-	if err != nil {
-		return fmt.Errorf("could not initialize transactions file: %w", err)
+func NewKVStorage(kind string) (kv.KVStorage, error) {
+	switch kind {
+	case "logs":
+		return NewKVLogStorage("transactions.log")
+	default:
+		return nil, fmt.Errorf("not a valid storage")
 	}
-
-	// Initialize global pointer
-	ServiceStorage = logStorage
-
-	events, errors := ServiceStorage.LoadEvents()
-	// We'll reuse the same variables set
-	event, isChannelOpen := kv.KVStorageEvent{}, true
-
-	fmt.Println("[Storage] Loading events from storage", isChannelOpen, err);
-	for isChannelOpen && err == nil {
-		select {
-		// the <-channel syntax allows isChannelOpen to get 'false' when channel is closed
-		// the consequent `case` here are not like those in a `switch`
-		case err, isChannelOpen = <-errors:
-		case event, isChannelOpen = <-events:
-			switch event.EventType {
-			case kv.DeleteEvent:
-				err = kv.Delete(event.Key)
-			case kv.PutEvent:
-				err = kv.Put(event.Key, event.Value)
-			}
-		}
-	}
-
-	fmt.Println("[Storage] Running storage");
-	ServiceStorage.Run()
-
-	return err
 }
+

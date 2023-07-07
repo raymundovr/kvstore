@@ -16,7 +16,7 @@ type KVLogStorage struct {
 	file         *os.File
 }
 
-func NewKVLogStorage(filename string) (*KVLogStorage, error) {
+func NewKVLogStorage(filename string) (core.KVStorage, error) {
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open log file: %w", err)
@@ -101,4 +101,35 @@ func (l *KVLogStorage) LoadEvents() (<-chan core.KVStorageEvent, <-chan error) {
 	}()
 
 	return events, errors
+}
+
+func (logStorage *KVLogStorage) Load(store *core.KVStore) error {
+	fmt.Println("[Storage] Initializing Events Storage");
+	// We'll reuse this
+	var err error
+
+	events, errors := logStorage.LoadEvents()
+	// We'll reuse the same variables set
+	event, isChannelOpen := core.KVStorageEvent{}, true
+
+	fmt.Println("[Storage] Loading events from storage", isChannelOpen, err);
+	for isChannelOpen && err == nil {
+		select {
+		// the <-channel syntax allows isChannelOpen to get 'false' when channel is closed
+		// the consequent `case` here are not like those in a `switch`
+		case err, isChannelOpen = <-errors:
+		case event, isChannelOpen = <-events:
+			switch event.EventType {
+			case core.DeleteEvent:
+				err = store.Delete(event.Key)
+			case core.PutEvent:
+				err = store.Put(event.Key, event.Value)
+			}
+		}
+	}
+
+	fmt.Println("[Storage] Running storage");
+	ServiceStorage.Run()
+
+	return err
 }

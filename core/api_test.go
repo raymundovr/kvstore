@@ -30,6 +30,10 @@ func (s *TestStorage) Err() <-chan error {
 	return errchan
 }
 
+func (s *TestStorage) Load(st *KVStore) error {
+	return nil
+}
+
 func TestPut(t *testing.T) {
 	s := NewKVStore(&TestStorage{})
 	err := s.Put("test", "kvstore")
