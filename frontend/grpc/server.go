@@ -5,12 +5,13 @@ import (
 	"log"
 	"net"
 
+	"github.com/raymundovr/kvstore/core"
 	"google.golang.org/grpc"
 )
 
-func RunServer() {
+func InitializeGRPC(store *core.KVStore) {
 	server := grpc.NewServer()
-	RegisterKeyValueServer(server, &KVServer{})
+	RegisterKeyValueServer(server, &KVServer{ store: store })
 
 	listener, err := net.Listen("tcp", ":8081")
 

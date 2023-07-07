@@ -1,10 +1,9 @@
-package server
+package rest
 
 import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"github.com/raymundovr/kvstore/storage"
-	kv "github.com/raymundovr/kvstore/core"
 )
 
 type KVEntry struct {
@@ -28,7 +27,8 @@ func putHandler(c echo.Context) error {
 		return err
 	}
 
-	err := kv.Put(entry.Key, entry.Value)
+	kvc := c.(*KVContext)
+	err := kvc.store.Put(entry.Key, entry.Value)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, KVResponse{Success: false})
 	}
@@ -45,7 +45,8 @@ func getHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 
-	value, err := kv.Get(key)
+	kvc := c.(*KVContext)
+	value, err := kvc.store.Get(key)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound)
@@ -64,8 +65,8 @@ func deleteHandler(c echo.Context) error {
 	if key == "" {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
-
-	err := kv.Delete(key)
+	kvc := c.(*KVContext)
+	err := kvc.store.Delete(key)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound)

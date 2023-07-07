@@ -5,8 +5,7 @@ import (
 	"os"
 
 	"github.com/raymundovr/kvstore/core"
-	"github.com/raymundovr/kvstore/grpc"
-	// "github.com/raymundovr/kvstore/server"
+	"github.com/raymundovr/kvstore/frontend"
 	"github.com/raymundovr/kvstore/storage"
 )
 
@@ -23,6 +22,5 @@ func main() {
 
 	kv.Restore()
 
-	// server.InitializeServer()
-	grpc.RunServer()
+	frontend.InitializeFrontend("grpc", kv)
 }
