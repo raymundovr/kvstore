@@ -23,7 +23,7 @@ func InitializeEventsStorage() error {
 
 	events, errors := ServiceStorage.LoadEvents()
 	// We'll reuse the same variables set
-	event, isChannelOpen := KVStorageEvent{}, true
+	event, isChannelOpen := kv.KVStorageEvent{}, true
 
 	fmt.Println("[Storage] Loading events from storage", isChannelOpen, err);
 	for isChannelOpen && err == nil {
@@ -33,9 +33,9 @@ func InitializeEventsStorage() error {
 		case err, isChannelOpen = <-errors:
 		case event, isChannelOpen = <-events:
 			switch event.EventType {
-			case DeleteEvent:
+			case kv.DeleteEvent:
 				err = kv.Delete(event.Key)
-			case PutEvent:
+			case kv.PutEvent:
 				err = kv.Put(event.Key, event.Value)
 			}
 		}

@@ -1,4 +1,4 @@
-package storage
+package core
 
 type KVStorage interface {
 	WriteDelete(k string) error
