@@ -5,8 +5,34 @@ import (
 	"testing"
 )
 
+type TestStorage struct {}
+
+func (s *TestStorage) WriteDelete(k string) error {
+	return nil
+}
+func (s *TestStorage) WritePut(k, v string) error {
+	return nil
+}
+
+func (s *TestStorage) Run() {
+
+}
+func (s *TestStorage) LoadEvents() (<-chan KVStorageEvent, <-chan error) {
+	evchan := make(chan KVStorageEvent)
+	errchan := make(chan error)
+
+	return evchan, errchan
+}
+
+func (s *TestStorage) Err() <-chan error {
+	errchan := make(chan error)
+
+	return errchan
+}
+
 func TestPut(t *testing.T) {
-	err := Put("test", "kvstore")
+	s := NewKVStore(&TestStorage{})
+	err := s.Put("test", "kvstore")
 
 	if err != nil {
 		t.Fatal("Cannot PUT key")
@@ -14,9 +40,10 @@ func TestPut(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	putKeyValue(t, "test", "kvstore")
+	s := NewKVStore(&TestStorage{})
+	putKeyValue(t, "test", "kvstore", s)
 
-	v, err := Get("test")
+	v, err := s.Get("test")
 	if err != nil {
 		t.Fatal("Cannot GET", err)
 	}
@@ -25,23 +52,24 @@ func TestGet(t *testing.T) {
 		t.Fatal("GET incorrect value returned")
 	}
 
-	v, err = Get("undefined")
+	v, err = s.Get("undefined")
 	if !errors.Is(err, ErrorNoSuchKey) || v != "" {
 		t.Fatal("GET incorrect NoSuchKey assertion", err, v)
 	}
 }
 
 func TestDelete(t *testing.T) {
-	putKeyValue(t, "test", "deleteme")
+	s := NewKVStore(&TestStorage{})
+	putKeyValue(t, "test", "deleteme", s)
 
-	err := Delete("test")
+	err := s.Delete("test")
 	if err != nil {
 		t.Fatal("Cannot Delete")
 	}
 }
 
-func putKeyValue(t *testing.T, k, v string) {
-	err := Put(k, v)
+func putKeyValue(t *testing.T, k, v string, s *KVStore) {
+	err := s.Put(k, v)
 
 	if err != nil {
 		t.Fatal("Cannot PUT key for test")

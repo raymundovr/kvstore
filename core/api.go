@@ -8,22 +8,34 @@ import (
 /*
 Handle with care
 */
-var store = struct {
+
+type KVStore struct {
 	sync.RWMutex
-	m map[string]string
-} {m: make(map[string]string) }
+	m       map[string]string
+	storage KVStorage
+}
 
 var ErrorNoSuchKey = errors.New("no such key")
 
-func Put(k, v string) error {
+func NewKVStore(storage KVStorage) *KVStore {
+	store := KVStore{
+		m:       make(map[string]string),
+		storage: storage,
+	}
+
+	return &store
+}
+
+func (store *KVStore) Put(k, v string) error {
 	store.Lock()
 	store.m[k] = v
+	store.storage.WritePut(k, v)
 	store.Unlock()
 
 	return nil
 }
 
-func Get(k string) (string, error) {
+func (store *KVStore) Get(k string) (string, error) {
 	store.RLock()
 	value, ok := store.m[k]
 	store.RUnlock()
@@ -35,9 +47,10 @@ func Get(k string) (string, error) {
 	return value, nil
 }
 
-func Delete(k string) error {
+func (store *KVStore) Delete(k string) error {
 	store.Lock()
 	delete(store.m, k)
+	store.storage.WriteDelete(k)
 	store.Unlock()
 
 	return nil
