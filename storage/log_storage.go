@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sync"
+
 	"github.com/raymundovr/kvstore/core"
 )
 
@@ -11,9 +13,10 @@ const LINE_FORMAT = "%d\t%d\t%s\t%s\n"
 
 type KVLogStorage struct {
 	events       chan<- core.KVStorageEvent // Write-only (to the channel)
-	errors       <-chan error          //Read-only (from the channel)
+	errors       <-chan error               //Read-only (from the channel)
 	lastSequence uint64
 	file         *os.File
+	wg           *sync.WaitGroup
 }
 
 func NewKVLogStorage(filename string) (core.KVStorage, error) {
@@ -22,21 +25,42 @@ func NewKVLogStorage(filename string) (core.KVStorage, error) {
 		return nil, fmt.Errorf("cannot open log file: %w", err)
 	}
 
-	return &KVLogStorage{file: file}, nil
+	return &KVLogStorage{file: file, wg: &sync.WaitGroup{}}, nil
 }
 
-func (l *KVLogStorage) WritePut(k, v string) error {
+func (l *KVLogStorage) WritePut(k, v string) {
+	l.wg.Add(1)
+	fmt.Println("channel", l.events)
 	l.events <- core.KVStorageEvent{EventType: core.PutEvent, Key: k, Value: v}
-	return nil
+	l.wg.Done()
 }
 
-func (l *KVLogStorage) WriteDelete(k string) error {
+func (l *KVLogStorage) WriteDelete(k string)  {
+	l.wg.Add(1)
 	l.events <- core.KVStorageEvent{EventType: core.DeleteEvent, Key: k}
-	return nil
+	l.wg.Done()
 }
 
 func (l *KVLogStorage) Err() <-chan error {
 	return l.errors
+}
+
+func (l *KVLogStorage) LastSequence() uint64 {
+	return l.lastSequence
+}
+
+func (l *KVLogStorage) Wait() {
+	l.wg.Wait()
+}
+
+func (l *KVLogStorage) Close() error {
+	l.wg.Wait()
+
+	if l.events != nil {
+		close(l.events) // Terminates Run loop and goroutine
+	}
+
+	return l.file.Close()
 }
 
 func (l *KVLogStorage) Run() {
@@ -59,6 +83,8 @@ func (l *KVLogStorage) Run() {
 				errors <- err
 				return
 			}
+
+			l.wg.Done()
 		}
 	}()
 }
@@ -67,7 +93,7 @@ func (l *KVLogStorage) LoadEvents() (<-chan core.KVStorageEvent, <-chan error) {
 	scanner := bufio.NewScanner(l.file)
 	// We declare a channel of concrete/copied values, not pointers
 	events := make(chan core.KVStorageEvent)
-	errors := make(chan error)
+	errors := make(chan error, 1)
 
 	go func() {
 		// We reuse the same event
@@ -96,40 +122,8 @@ func (l *KVLogStorage) LoadEvents() (<-chan core.KVStorageEvent, <-chan error) {
 
 		if err := scanner.Err(); err != nil {
 			errors <- fmt.Errorf("error reading log file: %w", err)
-			return
 		}
 	}()
 
 	return events, errors
-}
-
-func (logStorage *KVLogStorage) Load(store *core.KVStore) error {
-	fmt.Println("[Storage] Initializing Events Storage");
-	// We'll reuse this
-	var err error
-
-	events, errors := logStorage.LoadEvents()
-	// We'll reuse the same variables set
-	event, isChannelOpen := core.KVStorageEvent{}, true
-
-	fmt.Println("[Storage] Loading events from storage", isChannelOpen, err);
-	for isChannelOpen && err == nil {
-		select {
-		// the <-channel syntax allows isChannelOpen to get 'false' when channel is closed
-		// the consequent `case` here are not like those in a `switch`
-		case err, isChannelOpen = <-errors:
-		case event, isChannelOpen = <-events:
-			switch event.EventType {
-			case core.DeleteEvent:
-				err = store.Delete(event.Key)
-			case core.PutEvent:
-				err = store.Put(event.Key, event.Value)
-			}
-		}
-	}
-
-	fmt.Println("[Storage] Running storage");
-	ServiceStorage.Run()
-
-	return err
 }

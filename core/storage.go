@@ -1,11 +1,12 @@
 package core
 
 type KVStorage interface {
-	WriteDelete(k string) error
-	WritePut(k, v string) error
+	WriteDelete(k string)
+	WritePut(k, v string)
 
 	Run()
-	Load(store *KVStore) error
+	Wait()
+	Close() error
 	LoadEvents() (<-chan KVStorageEvent, <-chan error)
 
 	Err() <-chan error

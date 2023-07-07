@@ -5,18 +5,17 @@ import (
 	"testing"
 )
 
-type TestStorage struct {}
+type TestStorage struct{}
 
-func (s *TestStorage) WriteDelete(k string) error {
+func (s *TestStorage) WriteDelete(k string) {}
+func (s *TestStorage) WritePut(k, v string) {}
+
+func (s *TestStorage) Run() {}
+func (s *TestStorage) Wait() {}
+func (s *TestStorage) Close() error {
 	return nil
 }
-func (s *TestStorage) WritePut(k, v string) error {
-	return nil
-}
 
-func (s *TestStorage) Run() {
-
-}
 func (s *TestStorage) LoadEvents() (<-chan KVStorageEvent, <-chan error) {
 	evchan := make(chan KVStorageEvent)
 	errchan := make(chan error)
@@ -28,10 +27,6 @@ func (s *TestStorage) Err() <-chan error {
 	errchan := make(chan error)
 
 	return errchan
-}
-
-func (s *TestStorage) Load(st *KVStore) error {
-	return nil
 }
 
 func TestPut(t *testing.T) {
