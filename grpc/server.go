@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -17,6 +18,7 @@ func RunServer() {
 		log.Fatalf("failed to start TCP listener: %v", err)
 	}
 
+	fmt.Println("Starting gRPC server")
 	if err := server.Serve(listener); err != nil {
 		log.Fatalf("failed to start gRPC server: %v", err)
 	}
