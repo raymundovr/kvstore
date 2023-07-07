@@ -32,7 +32,7 @@ func (store *KVStore) Put(k, v string) error {
 	store.Lock()
 	store.m[k] = v
 	store.Unlock()
-	println("Added put")
+
 	store.storage.WritePut(k, v)
 	return nil
 }
@@ -58,12 +58,28 @@ func (store *KVStore) Delete(k string) error {
 	return nil
 }
 
+func (store *KVStore) DeleteThrough(k string) error {
+	store.Lock()
+	delete(store.m, k)
+	store.Unlock()
+
+	return nil
+}
+
+func (store *KVStore) PutThrough(k, v string) error {
+	store.Lock()
+	store.m[k] = v
+	store.Unlock()
+
+	return nil
+}
+
 func (store *KVStore) Restore() error {
 	fmt.Println("[Storage] Initializing Events Storage");
 	// We'll reuse this
 	var err error
 
-	/* events, errors := store.storage.LoadEvents()
+	events, errors := store.storage.LoadEvents()
 	// We'll reuse the same variables set
 	event, isChannelOpen := KVStorageEvent{}, true
 
@@ -76,14 +92,12 @@ func (store *KVStore) Restore() error {
 		case event, isChannelOpen = <-events:
 			switch event.EventType {
 			case DeleteEvent:
-				fmt.Println("Got a delete")
-				err = store.Delete(event.Key)
+				err = store.DeleteThrough(event.Key)
 			case PutEvent:
-				fmt.Println("Got a put")
-				err = store.Put(event.Key, event.Value)
+				err = store.PutThrough(event.Key, event.Value)
 			}
 		}
-	} */
+	}
 
 	fmt.Println("[Storage] Running storage");
 	store.storage.Run()
